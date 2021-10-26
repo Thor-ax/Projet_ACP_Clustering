@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/projet_acp_clustering.iml" filepath="$PROJECT_DIR$/.idea/projet_acp_clustering.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Projet_ACP_Clustering.iml" filepath="$PROJECT_DIR$/.idea/Projet_ACP_Clustering.iml" />
     </modules>
   </component>
 </project>
