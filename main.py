@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from sklearn.metrics.cluster import adjusted_rand_score
 
 aggregation_ds = pd.read_csv('./Donnees_projet_2021/aggregation.txt', sep="\t")
 jain_ds = pd.read_csv('./Donnees_projet_2021/jain.txt', sep="\t")
@@ -115,6 +116,38 @@ def kmeans_clusters():
 
     return;
 
-kmeans_clusters()
+def k_means(dataset, K):
+    km = KMeans(n_clusters=K, random_state=42, n_init=100)
+    km.fit_predict(dataset)
+    return(km)
 
+def rand_indices():
+    labels1 = k_means(aggregation_df, 7).labels_
+    labels2 = aggregation_df[:, [-1]]
+    labels2 = np.transpose(labels2)[0]
+    print(labels2, labels1)
+
+    print('Aggregation : ')
+    print('')
+    print('ARI = ', adjusted_rand_score(labels1, labels2))
+
+    print('')
+    labels1 = k_means(jain_df, 2).labels_
+    labels2 = jain_df[:, [-1]]
+    labels2 = np.transpose(labels2)[0]
+
+    print('Jain : ')
+    print('')
+    print('ARI = ', adjusted_rand_score(labels1, labels2))
+
+    print('')
+
+    labels1 = k_means(pathbased_df, 2).labels_
+    labels2 = pathbased_df[:, [-1]]
+    labels2 = np.transpose(labels2)[0]
+
+    print('Pathbased : ')
+    print('')
+    print('ARI = ', adjusted_rand_score(labels1, labels2))
+    return;
 
