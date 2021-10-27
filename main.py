@@ -35,11 +35,17 @@ def draw_scatter():
     plt.show()
     return;
 
-# comput Kmean algorithm and draw clusters
+# compute Kmean algorithm and draw clusters
 def kmeans_clusters():
     fig, axs = plt.subplots(3, 2)
     draw_k_means(axs)
+    draw_points(axs)
 
+    plt.show()
+
+    return;
+
+def draw_points(axs):
     for point in aggregation_df:
         color = int_to_color[point[2]]
         axs[0, 1].scatter(point[0], point[1], c=color)
@@ -57,10 +63,6 @@ def kmeans_clusters():
         axs[2, 1].scatter(point[0], point[1], c=color)
 
     axs[2, 1].set_title('Pathbased')
-
-
-    plt.show()
-
     return;
 
 def draw_k_means(axs):
@@ -119,43 +121,99 @@ def k_means(dataset, K):
     predict = km.fit_predict(dataset)
     return(km, predict)
 
-def rand_indices():
-    prediction = k_means(aggregation_df, 7)[1]
-    labels2 = aggregation_df[:, [-1]]
-    labels2 = np.transpose(labels2)[0]
+"""
 
-    print('Aggregation : ')
-    print('')
-    print('ARI = ', adjusted_rand_score(prediction, labels2))
+prediction = k_means(aggregation_df, 7)[1]
+labels2 = aggregation_df[:, [-1]]
+labels2 = np.transpose(labels2)[0]
 
-    print('')
-    prediction = k_means(jain_df, 2)[1]
-    labels2 = jain_df[:, [-1]]
-    labels2 = np.transpose(labels2)[0]
+print('Aggregation : ')
+print('')
+print('ARI = ', adjusted_rand_score(prediction, labels2))
 
-    print('Jain : ')
-    print('')
-    print('ARI = ', adjusted_rand_score(prediction, labels2))
+print('')
+prediction = k_means(jain_df, 2)[1]
+labels2 = jain_df[:, [-1]]
+labels2 = np.transpose(labels2)[0]
 
-    print('')
+print('Jain : ')
+print('')
+print('ARI = ', adjusted_rand_score(prediction, labels2))
 
-    prediction = k_means(pathbased_df, 3)[1]
-    print(prediction)
-    print('')
-    print(prediction.shape)
-    labels2 = pathbased_df[:, [-1]]
-    labels2 = np.transpose(labels2)[0]
+print('')
 
-    print('Pathbased : ')
+prediction = k_means(pathbased_df, 3)[1]
+print(prediction)
+print('')
+print(prediction.shape)
+labels2 = pathbased_df[:, [-1]]
+labels2 = np.transpose(labels2)[0]
+
+print('Pathbased : ')
+print('')
+print('ARI = ', adjusted_rand_score(labels2, prediction))
+
+"""
+
+def gaussian_mixture(data, nb_components):
+    print('*** Gaussian Mixture ***')
     print('')
-    print('ARI = ', adjusted_rand_score(labels2, prediction))
+    gmm = mixture.GaussianMixture(n_components=nb_components, n_init=100, max_iter=300).fit(data)
+
+    print('Mean: ')
+    print('')
+    print(gmm.means_)
+    print('')
+    print('Covariance: ')
+    print('')
+    print(np.sqrt(gmm.covariances_))
+    print('')
+    print('Prediction')
+    print('')
+    prediction = gmm.predict(data)
+
+    return prediction
+
+
+def gaussian_clusters():
+    fig, axs = plt.subplots(3, 2)
+    draw_gaussian_clusters(axs)
+    draw_points(axs)
+
+    plt.show()
+
     return;
 
+def draw_gaussian_clusters(axs):
+    # Aggregation
+    gm_aggregation_labels = gaussian_mixture(aggregation_df, 7)
 
-kmeans_clusters()
+    i = 0
+    for point in aggregation_df:
+        color = int_to_color[gm_aggregation_labels[i] + 1]
+        axs[0, 0].scatter(point[0], point[1], c=color)
+        i += 1
 
-def GaussianMixture(data):
-    gmm = mixture.GaussianMixture(n_components=1, covariance_type='full').fit(data)
+    axs[0, 0].set_title('Aggregation with Gaussian Mixture')
 
-    print(gmm.means_)
-    print(np.sqrt(gmm.covariances_))
+    # Jain
+    gm_jain_labels = gaussian_mixture(jain_df, 2)
+    i = 0
+    for point in jain_df:
+        color = int_to_color[gm_jain_labels[i] + 1]
+        axs[1, 0].scatter(point[0], point[1], c=color)
+        i += 1
+
+    axs[1, 0].set_title('Jain with Gaussian Mixture')
+
+    # Pathbased
+    gm_pathbased_labels = gaussian_mixture(pathbased_df, 3)
+    i = 0
+    for point in pathbased_df:
+        color = int_to_color[gm_pathbased_labels[i] + 1]
+        axs[2, 0].scatter(point[0], point[1], c=color)
+        i += 1
+
+    axs[2, 0].set_title('Pathbased with Gaussian Mixture')
+
+    return;
