@@ -4,17 +4,11 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.metrics.cluster import adjusted_rand_score
 
-aggregation_ds = pd.read_csv('./Donnees_projet_2021/aggregation.txt', sep="\t")
-jain_ds = pd.read_csv('./Donnees_projet_2021/jain.txt', sep="\t")
-pathbased_ds = pd.read_csv('./Donnees_projet_2021/pathbased.txt', sep="\t")
-
-aggregation_df = aggregation_ds.to_numpy()
-jain_df = jain_ds.to_numpy()
-pathbased_df = pathbased_ds.to_numpy()
+aggregation_df = np.loadtxt("./Donnees_projet_2021/aggregation.txt")
+jain_df = np.loadtxt("./Donnees_projet_2021/jain.txt")
+pathbased_df = np.loadtxt("./Donnees_projet_2021/pathbased.txt")
 
 int_to_color = {1: 'blue', 2:'red', 3:'green', 4: 'yellow', 5: 'orange', 6: 'purple', 7: 'grey'}
-
-
 
 # draw points for each dataset with one color per cluster
 def draw_scatter():
@@ -117,37 +111,40 @@ def kmeans_clusters():
     return;
 
 def k_means(dataset, K):
-    km = KMeans(n_clusters=K, random_state=42, n_init=100)
-    km.fit_predict(dataset)
-    return(km)
+    km = KMeans(n_clusters=K)
+    predict = km.fit_predict(dataset)
+    return(km, predict)
 
 def rand_indices():
-    labels1 = k_means(aggregation_df, 7).labels_
+    prediction = k_means(aggregation_df, 7)[1]
     labels2 = aggregation_df[:, [-1]]
     labels2 = np.transpose(labels2)[0]
-    print(labels2, labels1)
 
     print('Aggregation : ')
     print('')
-    print('ARI = ', adjusted_rand_score(labels1, labels2))
+    print('ARI = ', adjusted_rand_score(prediction, labels2))
 
     print('')
-    labels1 = k_means(jain_df, 2).labels_
+    prediction = k_means(jain_df, 2)[1]
     labels2 = jain_df[:, [-1]]
     labels2 = np.transpose(labels2)[0]
 
     print('Jain : ')
     print('')
-    print('ARI = ', adjusted_rand_score(labels1, labels2))
+    print('ARI = ', adjusted_rand_score(prediction, labels2))
 
     print('')
 
-    labels1 = k_means(pathbased_df, 2).labels_
+    prediction = k_means(pathbased_df, 3)[1]
+    print(prediction)
+    print('')
+    print(prediction.shape)
     labels2 = pathbased_df[:, [-1]]
     labels2 = np.transpose(labels2)[0]
 
     print('Pathbased : ')
     print('')
-    print('ARI = ', adjusted_rand_score(labels1, labels2))
+    print('ARI = ', adjusted_rand_score(labels2, prediction))
     return;
 
+kmeans_clusters()
