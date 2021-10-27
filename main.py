@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
 from sklearn.metrics.cluster import adjusted_rand_score
 from sklearn import mixture
 
@@ -9,7 +9,7 @@ aggregation_df = np.loadtxt("./Donnees_projet_2021/aggregation.txt")
 jain_df = np.loadtxt("./Donnees_projet_2021/jain.txt")
 pathbased_df = np.loadtxt("./Donnees_projet_2021/pathbased.txt")
 
-int_to_color = {-1: "pink", 0: "brown",1: 'blue', 2:'red', 3:'green', 4: 'yellow', 5: 'orange', 6: 'purple', 7: 'grey'}
+int_to_color = {-1: "black", 0: "brown",1: 'blue', 2:'red', 3:'green', 4: 'yellow', 5: 'orange', 6: 'purple', 7: 'grey'}
 
 # draw points for each dataset with one color per cluster
 def draw_scatter():
@@ -274,7 +274,6 @@ def db_scan_clusters(epsilon, min_sample, data):
 def draw_scatter_points(axs, data):
 
     if(data == "aggregation"):
-        print(axs.shape)
         for point in aggregation_df:
             color = int_to_color[point[2]]
             axs[0].scatter(point[0], point[1], c=color)
@@ -300,7 +299,7 @@ def draw_scatter_points(axs, data):
 
 def draw_dbscan_clusters(axs, epsilon, min_sample, data):
 
-    if (data == "aggregatoin"):
+    if (data == "aggregation"):
         # Aggregation
         ds_aggregation_labels = db_scan(aggregation_df, epsilon, min_sample)
 
@@ -308,36 +307,65 @@ def draw_dbscan_clusters(axs, epsilon, min_sample, data):
 
         i = 0
         for point in aggregation_df:
-            color = int_to_color[ds_aggregation_labels[i] + 1]
-            axs[0, 0].scatter(point[0], point[1], c=color)
+            color = int_to_color[ds_aggregation_labels[i]]
+            axs[1].scatter(point[0], point[1], c=color)
             i += 1
 
-        axs[0, 0].set_title('Aggregation with DBSCAN')
+        axs[1].set_title('Aggregation with DBSCAN')
 
     if(data == "jain"):
         # Jain
         ds_jain_labels = db_scan(jain_df, epsilon, min_sample)
         i = 0
         for point in jain_df:
-            color = int_to_color[ds_jain_labels[i] + 1]
-            axs[1, 0].scatter(point[0], point[1], c=color)
+            color = int_to_color[ds_jain_labels[i]]
+            axs[1].scatter(point[0], point[1], c=color)
             i += 1
 
-        axs[1, 0].set_title('Jain with DBSCAN')
+        axs[1].set_title('Jain with DBSCAN')
 
     if(data == "pathbased"):
         # Pathbased
         ds_pathbased_labels = db_scan(pathbased_df, epsilon, min_sample)
         i = 0
         for point in pathbased_df:
-            color = int_to_color[ds_pathbased_labels[i] + 1]
-            axs[2, 0].scatter(point[0], point[1], c=color)
+            color = int_to_color[ds_pathbased_labels[i]]
+            axs[1].scatter(point[0], point[1], c=color)
             i += 1
 
-        axs[2, 0].set_title('Pathbased with DBSCAN')
+        axs[1].set_title('Pathbased with DBSCAN')
 
     return;
 
-for k in [0.5, 1, 1.5, 2, 3, 4, 5]:
-    db_scan_clusters(k, 10, "aggregation")
+def get_dbscan_parameters(df):
+    eps = 0.5
+    ms = 3
+    ari = -1
+    for epsilon in [0.5, 1, 1.5, 2, 2.5, 3, 4, 5]:
+
+        for min_samples in range(3, 100):
+            labels1 = db_scan(data=df, epsilon = epsilon, min_sample = min_samples)
+            labels2 = df[:, [-1]]
+            labels2 = np.transpose(labels2)[0]
+            rd_score = adjusted_rand_score(labels1, labels2)
+            if(rd_score > ari):
+
+                ari = rd_score
+                eps = epsilon
+                ms = min_samples
+
+    print('ARI = ', ari)
+    print('epsilon = ', eps)
+    print("min_samples = ", ms)
+    return (epsilon, ms)
+
+
+# epsilon = 1.5 et min_samples = 3 pour aggregation => ARI = 1
+# epsilon = 2.5 et min_samples = 15 pour Jain => ARI = 1
+#epsilon = 2 et min_samples = 3 pour pathbased => ARI = 0.9858
+
+#get_dbscan_parameters(pathbased_df)
+
+#db_scan_clusters(2, 3, "pathbased")
+
 
