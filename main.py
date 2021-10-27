@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.metrics.cluster import adjusted_rand_score
+from sklearn import mixture
 
 aggregation_df = np.loadtxt("./Donnees_projet_2021/aggregation.txt")
 jain_df = np.loadtxt("./Donnees_projet_2021/jain.txt")
@@ -37,6 +38,33 @@ def draw_scatter():
 # comput Kmean algorithm and draw clusters
 def kmeans_clusters():
     fig, axs = plt.subplots(3, 2)
+    draw_k_means(axs)
+
+    for point in aggregation_df:
+        color = int_to_color[point[2]]
+        axs[0, 1].scatter(point[0], point[1], c=color)
+
+    axs[0, 1].set_title('Aggregation')
+
+    for point in jain_df:
+        color = int_to_color[point[2]]
+        axs[1, 1].scatter(point[0], point[1], c=color)
+
+    axs[1, 1].set_title('Jain')
+
+    for point in pathbased_df:
+        color = int_to_color[point[2]]
+        axs[2, 1].scatter(point[0], point[1], c=color)
+
+    axs[2, 1].set_title('Pathbased')
+
+
+    plt.show()
+
+    return;
+
+def draw_k_means(axs):
+
     # Aggregation
     km_aggregation = KMeans(n_clusters=7, random_state=42, n_init=100)
     km_aggregation.fit_predict(aggregation_df)
@@ -50,7 +78,6 @@ def kmeans_clusters():
 
     for center in centroids:
         axs[0, 0].scatter(center[0], center[1], c="black")
-
 
     axs[0, 0].set_title('Aggregation with Kmeans')
 
@@ -85,29 +112,6 @@ def kmeans_clusters():
         axs[2, 0].scatter(center[0], center[1], c="black")
 
     axs[2, 0].set_title('Pathbased with Kmeans')
-
-
-    for point in aggregation_df:
-        color = int_to_color[point[2]]
-        axs[0, 1].scatter(point[0], point[1], c=color)
-
-    axs[0, 1].set_title('Aggregation')
-
-    for point in jain_df:
-        color = int_to_color[point[2]]
-        axs[1, 1].scatter(point[0], point[1], c=color)
-
-    axs[1, 1].set_title('Jain')
-
-    for point in pathbased_df:
-        color = int_to_color[point[2]]
-        axs[2, 1].scatter(point[0], point[1], c=color)
-
-    axs[2, 1].set_title('Pathbased')
-
-
-    plt.show()
-
     return;
 
 def k_means(dataset, K):
@@ -147,4 +151,11 @@ def rand_indices():
     print('ARI = ', adjusted_rand_score(labels2, prediction))
     return;
 
+
 kmeans_clusters()
+
+def GaussianMixture(data):
+    gmm = mixture.GaussianMixture(n_components=1, covariance_type='full').fit(data)
+
+    print(gmm.means_)
+    print(np.sqrt(gmm.covariances_))
