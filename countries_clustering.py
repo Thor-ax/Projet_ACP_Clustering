@@ -10,6 +10,7 @@ from scipy.cluster import hierarchy
 from scipy import stats
 from sklearn import decomposition
 from scipy import linalg
+from mlxtend.plotting import plot_pca_correlation_graph
 
 
 
@@ -74,15 +75,16 @@ def scale_dataset(dataset):
     return Z
 
 # Print Correlation matrix and show the scatter matrix
-def correlation(dataset, column_name):
+def correlation(dataset, column_name, show_graph):
     correlations = dataset.corr()
     print(correlations)
     print('')
     print(correlations[column_name])
-    pd.plotting.scatter_matrix(dataset, alpha=0.5, diagonal='kde')
+    if(show_graph):
+        pd.plotting.scatter_matrix(dataset, alpha=0.5, diagonal='kde')
 
-    plt.show()
-    return;
+        plt.show()
+    return correlations;
 
 
 
@@ -209,17 +211,18 @@ def part_inertie_axe_i(i, vp):
             s_vp += vp[k]
     return (vp_i/s_vp)
 
-def graphe_valeurs_propres(valeurs_propres):
-    x = np.arange(1, len(valeurs_propres) + 1)
-    plt.plot(x, valeurs_propres)
+def graph_eighenvalues(eighenvalues):
+    x = np.arange(1, len(eighenvalues) + 1)
+    plt.plot(x, eighenvalues)
     plt.title("Valeurs propres en fonction de l'indice")
     plt.show()
 
-def graphe_inertie_cumulée(valeurs_propres, show_graph):
-    x = np.arange(1, len(valeurs_propres) + 1)
-    cumsum = np.cumsum(valeurs_propres)
+#draw the graph of cumlated inertie
+def graph_inertie_cumulated(eighenvalues, show_graph):
+    x = np.arange(1, len(eighenvalues) + 1)
+    cumsum = np.cumsum(eighenvalues)
     Y = []
-    for i in range(len(valeurs_propres)):
+    for i in range(len(eighenvalues)):
         Y.append(cumsum[i] / cumsum[-1])
 
     if(show_graph):
@@ -229,24 +232,36 @@ def graphe_inertie_cumulée(valeurs_propres, show_graph):
         plt.show()
     return Y
 
-def projection_premier_plan(datas):
+#draw the projection in the first plan
+
+def projection_first_plan(datas):
     for point in datas:
         plt.scatter(point[0], point[1], c='blue')
     plt.title('Projection dans le premier plan principal')
     plt.show()
 
+#draw the projection in the second plan
 def projection_second_plan(datas):
     for point in datas:
         plt.scatter(point[2], point[3], c='blue')
     plt.title('Projection dans le second plan principal')
     plt.show()
 
+# draw the correlation circle in the first plan and return the correlation matrix
+def draw_correlation_circle(Z):
+    figure, correlation_matrix = plot_pca_correlation_graph(Z,
+                                                            columns,
+                                                            dimensions=(1, 2),
+                                                            figure_axis_size=10)
+    plt.show()
+    return correlation_matrix
+
 
 dataset = fill_na_values()
 L = [('inflation', [104]), ('GDP', [1000000]), ('life_expectation', [0, 32.1]), ('income', [80600,75200])]
 replace_outliers_by_mean(L, dataset)
 Z = scale_dataset(dataset)
-#correlation(dataset, 'child_mortality')
+correlations_matrix = correlation(dataset, 'child_mortality', False)
 (slope_gdp, intercept_gdp, err_gdp) = linear_regression_income_GDP(dataset, False)
 (slope_fertility, intercept_fertility, err_fertility) = linear_regression_mortality_fertility(dataset, False)
 
@@ -254,12 +269,13 @@ Z = scale_dataset(dataset)
 ds = approximate_outliers_and_na(dataset, slope_gdp, intercept_gdp)
 Z = scale_dataset(ds)
 
-(valeurs_propres, vecteurs_propres, transformed) = acp(Z)
-#graphe_valeurs_propres(valeurs_propres)
-print(graphe_inertie_cumulée(valeurs_propres, False))
-quality_representation(valeurs_propres, 3)
-projection_premier_plan(transformed)
-projection_second_plan(transformed)
+(eighenvalues, eighenvectors, transformed) = acp(Z)
+#graph_eighenvalues(eighenvalues)
+print(graph_inertie_cumulated(eighenvalues, False))
+quality_representation(eighenvalues, 3)
+#projection_first_plan(transformed)
+#projection_second_plan(transformed)
+#draw_correlation_circle(Z)
 
 
 
