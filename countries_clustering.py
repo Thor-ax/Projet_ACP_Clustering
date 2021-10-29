@@ -323,27 +323,46 @@ def kmeans_clusters(Z, nb_cluster, show_clusters):
 
     return km.labels_
 
-def compare_lists(l1, l2):
-    nb_items_different = 0
-    for i in range(len(l1)):
-        country = l1[i]
-        if(l2.count(country) == 0):
-            print(l1[i])
-            nb_items_different += 1
-    return (nb_items_different)
+#compute Spectral clustering
+def spectral_culstering(df, nb_cluster, show_clusters):
+    print('')
+    print('*** Spectral Clustering ***')
+    print('')
+    clustering = SpectralClustering(n_clusters=nb_cluster, assign_labels = "discretize").fit(df)
+    print(clustering)
 
-def score_silhouette():
+    if(show_clusters):
+        draw_clusters(clustering.labels_, Z, None, 'Spectral clustering', False)
+
+
+    return clustering.labels_
+
+def gaussian_mixture(data, nb_components):
+    print('*** Gaussian Mixture ***')
+    print('')
+    gmm = mixture.GaussianMixture(n_components=nb_components, n_init=100, max_iter=300).fit(data)
+
+    prediction = gmm.predict(data)
+
+    return prediction
+
+def score_silhouette(algo):
     for K in [2, 3, 4, 5, 7, 9]:
         print('')
         print('For %d clusters ' % K)
-        km = KMeans(n_clusters=K, random_state=42)
+        score = 0
+        if(algo == 'KMEAN'):
 
-        km.fit_predict(Z)
+            score = silhouette_score(Z, kmeans_clusters(Z, K, False), metric='euclidean')
 
-        score = silhouette_score(Z, km.labels_, metric='euclidean')
+        elif(algo == 'SPECTRAL'):
+            score = silhouette_score(Z, spectral_culstering(Z, K, False), metric='euclidean')
 
         print('Silhouetter Score: %.3f' % score)
 
+
+
+# Functions call here
 
 dataset = fill_na_values()
 L = [('inflation', [104]), ('GDP', [1000000]), ('life_expectation', [0, 32.1]), ('income', [80600,75200])]
@@ -368,7 +387,7 @@ quality_representation(eighenvalues, 3)
 #draw_correlation_circle(Z)
 #CAH(Z, 17, dataset, False, True)
 
-"""
+
 
 cah_clusters = list_countries_per_clusters(CAH(Z, 17, ds, False, False))
 print("CAH clusters")
@@ -378,6 +397,10 @@ print('Cluster2 : ', cah_clusters[1])
 print('Cluster3 : ', cah_clusters[2])
 print('')
 
+print('')
+print('Silhouette score')
+print('')
+print("Spectral : ", score_silhouette("SPECTRAL"))
 
 #kmeans_clusters(Z, 3, True)
 list_countries_per_clusters(kmeans_clusters(Z, 3, False))
@@ -388,6 +411,17 @@ print('')
 print('Cluster1 : ', km_clusters[0])
 print('Cluster2 : ', km_clusters[1])
 print('Cluster3 : ', km_clusters[2])
-print(compare_lists(km_clusters[2], cah_clusters[0]))
 
-"""
+#spectral_culstering(Z, 3, True)
+list_countries_per_clusters(spectral_culstering(Z, 3, False))
+
+spectral_clusters = list_countries_per_clusters(spectral_culstering(Z, 2, True))
+print("Spectral clusters")
+print('')
+print('Cluster1 : ', spectral_clusters[0])
+print('Cluster2 : ', spectral_clusters[1])
+print('Cluster3 : ', spectral_clusters[2])
+print('')
+print("ARI entre Kmeans et CAH : ", adjusted_rand_score(CAH(Z, 17, ds, False, False), kmeans_clusters(Z, 3, False)))
+print("ARI entre Spectral clustering et CAH : ", adjusted_rand_score(CAH(Z, 17, ds, False, False), spectral_culstering(Z, 3, False)))
+print("ARI entre Kmeans et Spectral clustering : ", adjusted_rand_score(spectral_culstering(Z, 3, False), kmeans_clusters(Z, 3, False)))

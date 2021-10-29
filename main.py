@@ -179,7 +179,6 @@ def gaussian_mixture(data, nb_components):
 
     return prediction
 
-
 def gaussian_clusters():
     fig, axs = plt.subplots(3, 2)
     draw_gaussian_clusters(axs)
