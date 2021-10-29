@@ -83,12 +83,8 @@ def correlation(dataset, column_name, show_graph):
     print(correlations[column_name])
     if(show_graph):
         pd.plotting.scatter_matrix(dataset, alpha=0.5, diagonal='kde')
-
         plt.show()
     return correlations;
-
-
-
 
 def linear_regression_income_GDP(dataset, show_graph):
     X = dataset['income']
@@ -111,11 +107,9 @@ def linear_regression_income_GDP(dataset, show_graph):
 
         fitLine = predict_PIB(X, slope, intercept)
         plt.plot(X, fitLine, c='blue')
-
         plt.show()
 
     return (slope, intercept, std_err)
-
 
 def predict_PIB(x, slope, intercept):
    return slope * x + intercept
@@ -127,30 +121,10 @@ def get_index(country):
 
 #Approximate the outlisers values and the NA with the linear regression (GDP - income)
 def approximate_outliers_and_na(dataset, slope, intercept):
-    GDP = dataset['GDP']
     income = dataset['income']
-
-    print(GDP[get_index('Australia')])
-    print('')
-    print('PIB Australie = ', predict_PIB(income[get_index('Australia')], slope, intercept))
-    print('PIB United Kingdom = ', predict_PIB(income[get_index('United Kingdom')], slope, intercept))
-    print('PIB United States = ', predict_PIB(income[get_index('United States')], slope, intercept))
-
-    # use these values:
-    print('value = ', )
-    dataset['GDP'][get_index('Australia')] = predict_PIB(income[get_index('Australia')], slope, intercept)
-    dataset['GDP'][get_index('United Kingdom')] = predict_PIB(income[get_index('United Kingdom')], slope, intercept)
-    dataset['GDP'][get_index('United States')] = predict_PIB(income[get_index('United States')], slope, intercept)
-
-    dataset['GDP'][get_index('Italy')] = predict_PIB(income[get_index('Italy')], slope, intercept)
-    dataset['GDP'][get_index('Norway')] = predict_PIB(income[get_index('Norway')], slope, intercept)
-
-    print("PIB Italie = ", predict_PIB(income[get_index('Italy')], slope, intercept))
-    print('PIB Norvège = ', predict_PIB(income[get_index('Norway')], slope, intercept))
-
+    for count in ['Australia','United Kingdom','United States', 'Italy', 'Norway'  ]:
+        dataset['GDP'][get_index(count)] = predict_PIB(income[get_index(count)], slope, intercept)
     return dataset;
-
-
 
 def linear_regression_mortality_fertility(dataset, show_graph):
     X = dataset['child_mortality']
@@ -172,45 +146,24 @@ def linear_regression_mortality_fertility(dataset, show_graph):
     if(show_graph):
         fitLine = predict_fertility(X, slope, intercept)
         plt.plot(X, fitLine, c='blue')
-
         plt.show()
     return (slope, intercept, std_err)
-
 
 def predict_fertility(x, slope, intercept):
    return slope * x + intercept
 
-
 #ACP
-
 def acp(Z):
-
     pca = decomposition.PCA()
     pca.fit(Z)
-
     valeur_propres = pca.explained_variance_
     vecteur_propres = pca.components_
-    print('valeur propres = ', valeur_propres)
-    print('')
-    print('vecteur propres : ', vecteur_propres)
-
-
     return (valeur_propres, vecteur_propres, pca.transform(Z))
 
 def quality_representation(valeur_propres, i):
     cumsum = np.cumsum(valeur_propres)
-
     qualite_representation = cumsum[i] / cumsum[-1]
     print('Qualité de la représentation si on garde %d axes = %f' % (i + 1, qualite_representation))
-    print('')
-
-def part_inertie_axe_i(i, vp):
-    vp_i = vp[i]
-    s_vp = 0
-    for k in range(len(vp)):
-        if(k != i):
-            s_vp += vp[k]
-    return (vp_i/s_vp)
 
 def graph_eighenvalues(eighenvalues):
     x = np.arange(1, len(eighenvalues) + 1)
@@ -229,23 +182,15 @@ def graph_inertie_cumulated(eighenvalues, show_graph):
     if(show_graph):
         plt.plot(x, Y)
         plt.title('Inertie cumulée')
-
         plt.show()
     return Y
 
 #draw the projection in the first plan
-
-def projection_first_plan(datas):
+def projection_first_plan(datas, plan):
     for point in datas:
-        plt.scatter(point[0], point[1], c='blue')
+        if(plan == 'first'):
+            plt.scatter(point[0], point[1], c='blue')
     plt.title('Projection dans le premier plan principal')
-    plt.show()
-
-#draw the projection in the second plan
-def projection_second_plan(datas):
-    for point in datas:
-        plt.scatter(point[2], point[3], c='blue')
-    plt.title('Projection dans le second plan principal')
     plt.show()
 
 # draw the correlation circle in the first plan and return the correlation matrix
@@ -264,17 +209,14 @@ def draw_correlation_circle(Z):
 def CAH(Z, t, ds, draw_graph, draw_cluster):
     print('')
     print('*** CAH ***')
-
     linked = hierarchy.linkage(Z, 'ward', optimal_ordering=True)
 
     if(draw_graph):
-        dn = hierarchy.dendrogram(linked, color_threshold=t)
+        hierarchy.dendrogram(linked, color_threshold=t)
 
         plt.show()
 
     clusters = fcluster(linked, t=t, criterion='distance')
-    print('')
-    print('clusters', clusters)
     if(draw_cluster):
         draw_clusters(clusters, Z, None, 'CAH', False)
     return clusters
@@ -282,8 +224,6 @@ def CAH(Z, t, ds, draw_graph, draw_cluster):
 def draw_clusters(labels, ds, centers, title, is_k_mean):
     i = 0
     for point in ds:
-        print(point)
-
         color = int_to_color[labels[i] + 1]
         plt.scatter(point[0], point[1], c=color)
         i += 1
@@ -293,16 +233,11 @@ def draw_clusters(labels, ds, centers, title, is_k_mean):
             plt.scatter(center[0], center[1], c="black")
 
     plt.title(title)
-
     plt.show()
 
-# For 3 clusters
+# For 4 clusters maximum => return cluster with coutries names
 def list_countries_per_clusters(labels):
-    C1 = []
-    C2 = []
-    C3 = []
-    C4 = []
-    i = 0
+    C1, C2, C3, C4, i = [], [], [], [], 0
     for label in labels:
         if(label == 0):
             C1.append(countries[i])
@@ -317,12 +252,10 @@ def list_countries_per_clusters(labels):
 
 # compute Kmean algorithm and draw clusters
 def kmeans_clusters(Z, nb_cluster, show_clusters):
-
     km = KMeans(n_clusters=nb_cluster, random_state=42, n_init=100)
     km.fit_predict(Z)
     if(show_clusters):
         draw_clusters(km.labels_, Z, km.cluster_centers_, 'Kmeans clustering', True)
-
     return km.labels_
 
 #compute Spectral clustering
@@ -342,7 +275,6 @@ def gaussian_mixture(data, nb_components, show_clusters):
     print('*** Gaussian Mixture ***')
     print('')
     gmm = mixture.GaussianMixture(n_components=nb_components, n_init=100, max_iter=300).fit(data)
-
     prediction = gmm.predict(data)
 
     if (show_clusters):
@@ -374,7 +306,16 @@ def score_silhouette(algo):
 
         print('Silhouetter Score: %.3f' % score)
 
-
+# return the index of the min if it's not in index_list
+def get_min(index_list, L):
+    min = L[0]
+    index_min = 0
+    for k in range(len(L)):
+        if k not in index_list :
+            if(L[k] < min):
+                min = L[k]
+                index_min = k
+    return (index_min)
 
 # Functions call here
 
@@ -396,11 +337,9 @@ print('')
 print(graph_inertie_cumulated(eighenvalues, False))
 print('')
 quality_representation(eighenvalues, 3)
-#projection_first_plan(transformed)
-#projection_second_plan(transformed)
+#projection_first_plan(transformed, "first")
 #draw_correlation_circle(Z)
 #CAH(Z, 17, dataset, False, True)
-
 
 """
 cah_clusters = list_countries_per_clusters(CAH(Z, 17, ds, False, False))
@@ -424,8 +363,6 @@ print('Cluster1 : ', km_clusters[0])
 print('Cluster2 : ', km_clusters[1])
 print('Cluster3 : ', km_clusters[2])
 
-
-
 spectral_clusters = list_countries_per_clusters(spectral_culstering(Z, 2, True)[0])
 print("Spectral clusters")
 print('')
@@ -438,7 +375,6 @@ print('')
 #print("ARI entre Kmeans et CAH : ", adjusted_rand_score(CAH(Z, 17, ds, False, False), kmeans_clusters(Z, 3, False)))
 
 #Gaussian mixture
-
 
 gaussian_clusters = list_countries_per_clusters(gaussian_mixture(Z, 4, True))
 print("Gaussian clusters")
@@ -459,8 +395,6 @@ for epsilon in [ 1.5, 1.75, 2, 3, 3.5, 4, 4.5, 5]:
         score =  silhouette_score(Z, db_scan(Z, epsilon, min_sample, False), metric='euclidean')
         print("Score = %f for epsilon = %f and min_sample = %d" %(score, epsilon, min_sample))
 
-
-
 dbs_clusters = list_countries_per_clusters(db_scan(Z, 1.5, 10, True))
 print("DBSCAN clusters")
 print('')
@@ -474,7 +408,6 @@ print("ARI entre Gaussian et Spectral : ", adjusted_rand_score(gaussian_mixture(
 sc = spectral_culstering(Z, 2, False)
 spectral_clusters = list_countries_per_clusters(sc[0])
 af_matrix = sc[1]
-
 
 cluster_poor_countries = spectral_clusters[1]
 cluster_rich_countries = spectral_clusters[0]
@@ -496,15 +429,7 @@ L = [('inflation', [104]), ('GDP', [1000000]), ('life_expectation', [0, 32.1]), 
 replace_outliers_by_mean(L, new_dataframe)
 print(new_countries)
 # => Environ 50 pays restants, on doit en choisir 10
-def get_min(index_list, L):
-    min = L[0]
-    index_min = 0
-    for k in range(len(L)):
-        if k not in index_list :
-            if(L[k] < min):
-                min = L[k]
-                index_min = k
-    return (index_min)
+
 
 
 def with_mean_score():
