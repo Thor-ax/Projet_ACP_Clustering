@@ -2,26 +2,25 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
-from sklearn.metrics.cluster import adjusted_rand_score
 from sklearn import mixture
 from scipy.cluster.hierarchy import fcluster, ward
 from sklearn.preprocessing import StandardScaler
 from scipy.cluster import hierarchy
 from scipy import stats
 from sklearn import decomposition
-from scipy import linalg
 from mlxtend.plotting import plot_pca_correlation_graph
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics import silhouette_score
 
 
 int_to_color = {-1: "black", 0: "brown",1: 'blue', 2:'red', 3:'green', 4: 'yellow', 5: 'orange', 6: 'purple', 7: 'grey', 8: "pink", 9: ""}
 
-df = pd.read_csv("./Donnees_projet_2021/data.csv")
+dataframe = pd.read_csv("./Donnees_projet_2021/data.csv")
 
 # save countries name
-countries = df['country']
+countries = dataframe['country']
 
 # and remove column
+df = dataframe
 del df['country']
 columns = df.columns
 
@@ -34,8 +33,8 @@ def get_nb_na_in_df():
     return df.isnull().sum().sum()
 
 #fill the na values with the mean
-def fill_na_values():
-    x = df.fillna(df.mean())
+def fill_na_values(ds):
+    x = ds.fillna(ds.mean())
     return x
 
 # Print the outlisers value (above or under the threshold_value
@@ -302,16 +301,19 @@ def list_countries_per_clusters(labels):
     C1 = []
     C2 = []
     C3 = []
+    C4 = []
     i = 0
     for label in labels:
-        if(label == 1):
+        if(label == 0):
             C1.append(countries[i])
-        elif(label == 2):
+        elif(label == 1):
             C2.append(countries[i])
-        else:
+        elif label == 2:
             C3.append((countries[i]))
+        elif label == 3:
+            C4.append((countries[i]))
         i += 1
-    return (C1, C2, C3)
+    return (C1, C2, C3, C4)
 
 # compute Kmean algorithm and draw clusters
 def kmeans_clusters(Z, nb_cluster, show_clusters):
@@ -329,22 +331,34 @@ def spectral_culstering(df, nb_cluster, show_clusters):
     print('*** Spectral Clustering ***')
     print('')
     clustering = SpectralClustering(n_clusters=nb_cluster, assign_labels = "discretize").fit(df)
-    print(clustering)
 
     if(show_clusters):
         draw_clusters(clustering.labels_, Z, None, 'Spectral clustering', False)
 
 
-    return clustering.labels_
+    return (clustering.labels_, clustering.affinity_matrix_)
 
-def gaussian_mixture(data, nb_components):
+def gaussian_mixture(data, nb_components, show_clusters):
     print('*** Gaussian Mixture ***')
     print('')
     gmm = mixture.GaussianMixture(n_components=nb_components, n_init=100, max_iter=300).fit(data)
 
     prediction = gmm.predict(data)
 
+    if (show_clusters):
+        draw_clusters(prediction, Z, None, 'Gaussian mixture', False)
+
     return prediction
+
+def db_scan(data, epsilon, min_sample, show_clusters):
+    print('')
+    print('*** DBSCAN ***')
+    clustering = DBSCAN(eps=epsilon, min_samples=min_sample).fit(data)
+
+    if (show_clusters):
+        draw_clusters(clustering.labels_, Z, None, 'DBSCAN', False)
+
+    return clustering.labels_
 
 def score_silhouette(algo):
     for K in [2, 3, 4, 5, 7, 9]:
@@ -356,7 +370,7 @@ def score_silhouette(algo):
             score = silhouette_score(Z, kmeans_clusters(Z, K, False), metric='euclidean')
 
         elif(algo == 'SPECTRAL'):
-            score = silhouette_score(Z, spectral_culstering(Z, K, False), metric='euclidean')
+            score = silhouette_score(Z, spectral_culstering(Z, K, False)[0], metric='euclidean')
 
         print('Silhouetter Score: %.3f' % score)
 
@@ -364,7 +378,7 @@ def score_silhouette(algo):
 
 # Functions call here
 
-dataset = fill_na_values()
+dataset = fill_na_values(df)
 L = [('inflation', [104]), ('GDP', [1000000]), ('life_expectation', [0, 32.1]), ('income', [80600,75200])]
 replace_outliers_by_mean(L, dataset)
 Z = scale_dataset(dataset)
@@ -388,7 +402,7 @@ quality_representation(eighenvalues, 3)
 #CAH(Z, 17, dataset, False, True)
 
 
-
+"""
 cah_clusters = list_countries_per_clusters(CAH(Z, 17, ds, False, False))
 print("CAH clusters")
 print('')
@@ -402,8 +416,6 @@ print('Silhouette score')
 print('')
 print("Spectral : ", score_silhouette("SPECTRAL"))
 
-#kmeans_clusters(Z, 3, True)
-list_countries_per_clusters(kmeans_clusters(Z, 3, False))
 
 km_clusters = list_countries_per_clusters(kmeans_clusters(Z, 3, False))
 print("Kmeans clusters")
@@ -412,16 +424,132 @@ print('Cluster1 : ', km_clusters[0])
 print('Cluster2 : ', km_clusters[1])
 print('Cluster3 : ', km_clusters[2])
 
-#spectral_culstering(Z, 3, True)
-list_countries_per_clusters(spectral_culstering(Z, 3, False))
 
-spectral_clusters = list_countries_per_clusters(spectral_culstering(Z, 2, True))
+
+spectral_clusters = list_countries_per_clusters(spectral_culstering(Z, 2, True)[0])
 print("Spectral clusters")
 print('')
 print('Cluster1 : ', spectral_clusters[0])
 print('Cluster2 : ', spectral_clusters[1])
-print('Cluster3 : ', spectral_clusters[2])
+
 print('')
-print("ARI entre Kmeans et CAH : ", adjusted_rand_score(CAH(Z, 17, ds, False, False), kmeans_clusters(Z, 3, False)))
-print("ARI entre Spectral clustering et CAH : ", adjusted_rand_score(CAH(Z, 17, ds, False, False), spectral_culstering(Z, 3, False)))
-print("ARI entre Kmeans et Spectral clustering : ", adjusted_rand_score(spectral_culstering(Z, 3, False), kmeans_clusters(Z, 3, False)))
+
+
+#print("ARI entre Kmeans et CAH : ", adjusted_rand_score(CAH(Z, 17, ds, False, False), kmeans_clusters(Z, 3, False)))
+
+#Gaussian mixture
+
+
+gaussian_clusters = list_countries_per_clusters(gaussian_mixture(Z, 4, True))
+print("Gaussian clusters")
+print('')
+print('Cluster1 : ', gaussian_clusters[0])
+print('Cluster2 : ', gaussian_clusters[1])
+print('Cluster3 : ', gaussian_clusters[2])
+print('Cluster4 : ', gaussian_clusters[3])
+print('')
+#print("ARI entre Gaussian et Spectral : ", adjusted_rand_score(gaussian_mixture(Z, 2, False), spectral_culstering(Z, 2, False)[0]))
+
+#DBSCAN
+
+#Find the correct parameters
+for epsilon in [ 1.5, 1.75, 2, 3, 3.5, 4, 4.5, 5]:
+
+    for min_sample in [3, 5, 7, 10, 12, 15]:
+        score =  silhouette_score(Z, db_scan(Z, epsilon, min_sample, False), metric='euclidean')
+        print("Score = %f for epsilon = %f and min_sample = %d" %(score, epsilon, min_sample))
+
+
+
+dbs_clusters = list_countries_per_clusters(db_scan(Z, 1.5, 10, True))
+print("DBSCAN clusters")
+print('')
+print('Cluster1 : ', dbs_clusters[0])
+print('Cluster2 : ', dbs_clusters[1])
+print('Cluster3 : ', dbs_clusters[2])
+print('')
+print("ARI entre Gaussian et Spectral : ", adjusted_rand_score(gaussian_mixture(Z, 2, False), spectral_culstering(Z, 2, False)[0]))
+
+"""
+sc = spectral_culstering(Z, 2, False)
+spectral_clusters = list_countries_per_clusters(sc[0])
+af_matrix = sc[1]
+
+
+cluster_poor_countries = spectral_clusters[1]
+cluster_rich_countries = spectral_clusters[0]
+copy_countries = countries.tolist()
+new_dataframe = pd.read_csv("./Donnees_projet_2021/data.csv")
+print(new_dataframe)
+for country in cluster_rich_countries:
+    lst = np.array(copy_countries)
+    result = copy_countries.index(country)
+    print(country)
+    new_dataframe.drop([result], inplace=True)
+
+print('New dataframe from poor countries clustering')
+print(new_dataframe)
+new_countries = new_dataframe['country']
+del new_dataframe['country']
+new_dataframe = fill_na_values(new_dataframe)
+L = [('inflation', [104]), ('GDP', [1000000]), ('life_expectation', [0, 32.1]), ('income', [80600,75200])]
+replace_outliers_by_mean(L, new_dataframe)
+print(new_countries)
+# => Environ 50 pays restants, on doit en choisir 10
+def get_min(index_list, L):
+    min = L[0]
+    index_min = 0
+    for k in range(len(L)):
+        if k not in index_list :
+            if(L[k] < min):
+                min = L[k]
+                index_min = k
+    return (index_min)
+
+
+def with_mean_score():
+    new_Z = scale_dataset(new_dataframe)
+    row_means = new_Z.mean(axis=1)
+    liste_index_countries_to_help = []
+
+    for k in range(10):
+        liste_index_countries_to_help.append(get_min(liste_index_countries_to_help, row_means))
+    print(liste_index_countries_to_help)
+
+
+    liste_countries_to_help = []
+    np_countries = new_countries.to_numpy()
+    for index in liste_index_countries_to_help:
+        liste_countries_to_help.append(np_countries[index])
+
+    print(liste_countries_to_help)
+    print('')
+    print(Z.mean(axis=1))
+
+
+sorted_df_by_gdp = new_dataframe.sort_values(by=['GDP'])
+sorted_df_by_child_mortality = new_dataframe.sort_values(by=['child_mortality'])
+
+list_countries_with_lowest_gdp = []
+list_countries_with_highest_cm = []
+
+k = 0
+while k < 20:
+    list_countries_with_lowest_gdp.append(countries[sorted_df_by_gdp.index[k]])
+    list_countries_with_highest_cm.append(countries[sorted_df_by_child_mortality.index[-1-k]])
+    print(countries[sorted_df_by_gdp.index[k]])
+    print(countries[sorted_df_by_child_mortality.index[-1-k]])
+
+    k += 1
+
+
+final_countries = []
+for c in list_countries_with_highest_cm:
+    if c in list_countries_with_lowest_gdp:
+        final_countries.append(c)
+
+print('')
+print('Liste des pays à aider en priorité: ')
+print(final_countries[:10])
+
+

@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
 from sklearn.metrics.cluster import adjusted_rand_score
 from sklearn import mixture
-from scipy.cluster.hierarchy import fcluster, ward
+from scipy.cluster.hierarchy import fcluster
 from sklearn.preprocessing import StandardScaler
 from scipy.cluster import hierarchy
-
-
 
 aggregation_df = np.loadtxt("./Donnees_projet_2021/aggregation.txt")
 jain_df = np.loadtxt("./Donnees_projet_2021/jain.txt")
