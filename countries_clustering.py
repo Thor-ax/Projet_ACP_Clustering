@@ -11,8 +11,10 @@ from scipy import stats
 from sklearn import decomposition
 from scipy import linalg
 from mlxtend.plotting import plot_pca_correlation_graph
+from sklearn.metrics import silhouette_samples, silhouette_score
 
 
+int_to_color = {-1: "black", 0: "brown",1: 'blue', 2:'red', 3:'green', 4: 'yellow', 5: 'orange', 6: 'purple', 7: 'grey', 8: "pink", 9: ""}
 
 df = pd.read_csv("./Donnees_projet_2021/data.csv")
 
@@ -257,6 +259,92 @@ def draw_correlation_circle(Z):
     return correlation_matrix
 
 
+#Clustering
+
+#CAH
+def CAH(Z, t, ds, draw_graph, draw_cluster):
+    print('')
+    print('*** CAH ***')
+
+    linked = hierarchy.linkage(Z, 'ward', optimal_ordering=True)
+
+    if(draw_graph):
+        dn = hierarchy.dendrogram(linked, color_threshold=t)
+
+        plt.show()
+
+    clusters = fcluster(linked, t=t, criterion='distance')
+    print('')
+    print('clusters', clusters)
+    if(draw_cluster):
+        draw_clusters(clusters, Z, None, 'CAH', False)
+    return clusters
+
+def draw_clusters(labels, ds, centers, title, is_k_mean):
+    i = 0
+    for point in ds:
+        print(point)
+
+        color = int_to_color[labels[i] + 1]
+        plt.scatter(point[0], point[1], c=color)
+        i += 1
+
+    if(is_k_mean):
+        for center in centers:
+            plt.scatter(center[0], center[1], c="black")
+
+    plt.title(title)
+
+    plt.show()
+
+# For 3 clusters
+def list_countries_per_clusters(labels):
+    C1 = []
+    C2 = []
+    C3 = []
+    i = 0
+    for label in labels:
+        if(label == 1):
+            C1.append(countries[i])
+        elif(label == 2):
+            C2.append(countries[i])
+        else:
+            C3.append((countries[i]))
+        i += 1
+    return (C1, C2, C3)
+
+# compute Kmean algorithm and draw clusters
+def kmeans_clusters(Z, nb_cluster, show_clusters):
+
+    km = KMeans(n_clusters=nb_cluster, random_state=42, n_init=100)
+    km.fit_predict(Z)
+    if(show_clusters):
+        draw_clusters(km.labels_, Z, km.cluster_centers_, 'Kmeans clustering', True)
+
+    return km.labels_
+
+def compare_lists(l1, l2):
+    nb_items_different = 0
+    for i in range(len(l1)):
+        country = l1[i]
+        if(l2.count(country) == 0):
+            print(l1[i])
+            nb_items_different += 1
+    return (nb_items_different)
+
+def score_silhouette():
+    for K in [2, 3, 4, 5, 7, 9]:
+        print('')
+        print('For %d clusters ' % K)
+        km = KMeans(n_clusters=K, random_state=42)
+
+        km.fit_predict(Z)
+
+        score = silhouette_score(Z, km.labels_, metric='euclidean')
+
+        print('Silhouetter Score: %.3f' % score)
+
+
 dataset = fill_na_values()
 L = [('inflation', [104]), ('GDP', [1000000]), ('life_expectation', [0, 32.1]), ('income', [80600,75200])]
 replace_outliers_by_mean(L, dataset)
@@ -271,11 +359,35 @@ Z = scale_dataset(ds)
 
 (eighenvalues, eighenvectors, transformed) = acp(Z)
 #graph_eighenvalues(eighenvalues)
+print('')
 print(graph_inertie_cumulated(eighenvalues, False))
+print('')
 quality_representation(eighenvalues, 3)
 #projection_first_plan(transformed)
 #projection_second_plan(transformed)
 #draw_correlation_circle(Z)
+#CAH(Z, 17, dataset, False, True)
+
+"""
+
+cah_clusters = list_countries_per_clusters(CAH(Z, 17, ds, False, False))
+print("CAH clusters")
+print('')
+print('Cluster1 : ', cah_clusters[0])
+print('Cluster2 : ', cah_clusters[1])
+print('Cluster3 : ', cah_clusters[2])
+print('')
 
 
+#kmeans_clusters(Z, 3, True)
+list_countries_per_clusters(kmeans_clusters(Z, 3, False))
 
+km_clusters = list_countries_per_clusters(kmeans_clusters(Z, 3, False))
+print("Kmeans clusters")
+print('')
+print('Cluster1 : ', km_clusters[0])
+print('Cluster2 : ', km_clusters[1])
+print('Cluster3 : ', km_clusters[2])
+print(compare_lists(km_clusters[2], cah_clusters[0]))
+
+"""

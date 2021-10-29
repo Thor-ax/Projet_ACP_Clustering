@@ -428,8 +428,6 @@ def draw_spectral_cluster(axs, assign_method):
 
 #spectral_clusters("kmeans")
 
-
-
 """
 prediction = spectral_culstering(aggregation_df, 7, "kmeans")
 labels2 = aggregation_df[:, [-1]]
