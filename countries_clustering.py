@@ -86,6 +86,7 @@ def correlation(dataset, column_name, show_graph):
         plt.show()
     return correlations;
 
+#return coefficient of linear regression  between GDP and income
 def linear_regression_income_GDP(dataset, show_graph):
     X = dataset['income']
     Y = dataset['GDP']
@@ -105,15 +106,17 @@ def linear_regression_income_GDP(dataset, show_graph):
 
     if(show_graph):
 
-        fitLine = predict_PIB(X, slope, intercept)
+        fitLine = predict(X, slope, intercept)
         plt.plot(X, fitLine, c='blue')
         plt.show()
 
     return (slope, intercept, std_err)
 
-def predict_PIB(x, slope, intercept):
+#compute linear regression
+def predict(x, slope, intercept):
    return slope * x + intercept
 
+#return index of a country in the dataset
 def get_index(country):
     for i,e in enumerate(countries):
         if e == country:
@@ -123,9 +126,10 @@ def get_index(country):
 def approximate_outliers_and_na(dataset, slope, intercept):
     income = dataset['income']
     for count in ['Australia','United Kingdom','United States', 'Italy', 'Norway'  ]:
-        dataset['GDP'][get_index(count)] = predict_PIB(income[get_index(count)], slope, intercept)
+        dataset['GDP'][get_index(count)] = predict(income[get_index(count)], slope, intercept)
     return dataset;
 
+#return coefficient of linear regression between child_mortality and total_fertility
 def linear_regression_mortality_fertility(dataset, show_graph):
     X = dataset['child_mortality']
     Y = dataset['total_fertility']
@@ -144,13 +148,10 @@ def linear_regression_mortality_fertility(dataset, show_graph):
     print('')
 
     if(show_graph):
-        fitLine = predict_fertility(X, slope, intercept)
+        fitLine = predict(X, slope, intercept)
         plt.plot(X, fitLine, c='blue')
         plt.show()
     return (slope, intercept, std_err)
-
-def predict_fertility(x, slope, intercept):
-   return slope * x + intercept
 
 #ACP
 def acp(Z):
@@ -160,11 +161,13 @@ def acp(Z):
     vecteur_propres = pca.components_
     return (valeur_propres, vecteur_propres, pca.transform(Z))
 
+# return the quality of the representation from the eighenvalues
 def quality_representation(valeur_propres, i):
     cumsum = np.cumsum(valeur_propres)
     qualite_representation = cumsum[i] / cumsum[-1]
     print('Qualité de la représentation si on garde %d axes = %f' % (i + 1, qualite_representation))
 
+#plot eighenvalues in graph
 def graph_eighenvalues(eighenvalues):
     x = np.arange(1, len(eighenvalues) + 1)
     plt.plot(x, eighenvalues)
@@ -193,7 +196,7 @@ def projection_first_plan(datas, plan):
     plt.title('Projection dans le premier plan principal')
     plt.show()
 
-# draw the correlation circle in the first plan and return the correlation matrix
+# plot the correlation circle in the first plan and return the correlation matrix
 def draw_correlation_circle(Z):
     figure, correlation_matrix = plot_pca_correlation_graph(Z,
                                                             columns,
@@ -203,9 +206,9 @@ def draw_correlation_circle(Z):
     return correlation_matrix
 
 
-#Clustering
+# *** Clustering ***
 
-#CAH
+#compute the CAH and return the labels (can plot the clustering)
 def CAH(Z, t, ds, draw_graph, draw_cluster):
     print('')
     print('*** CAH ***')
@@ -221,6 +224,7 @@ def CAH(Z, t, ds, draw_graph, draw_cluster):
         draw_clusters(clusters, Z, None, 'CAH', False)
     return clusters
 
+#Draw the cluster with given labels and dataset
 def draw_clusters(labels, ds, centers, title, is_k_mean):
     i = 0
     for point in ds:
@@ -235,7 +239,7 @@ def draw_clusters(labels, ds, centers, title, is_k_mean):
     plt.title(title)
     plt.show()
 
-# For 4 clusters maximum => return cluster with coutries names
+# For 4 clusters maximum => return cluster with coutries names (labels => List of countries)
 def list_countries_per_clusters(labels):
     C1, C2, C3, C4, i = [], [], [], [], 0
     for label in labels:
@@ -250,7 +254,7 @@ def list_countries_per_clusters(labels):
         i += 1
     return (C1, C2, C3, C4)
 
-# compute Kmean algorithm and draw clusters
+# compute Kmean algorithm, return the labels and plot clusters
 def kmeans_clusters(Z, nb_cluster, show_clusters):
     km = KMeans(n_clusters=nb_cluster, random_state=42, n_init=100)
     km.fit_predict(Z)
@@ -258,7 +262,7 @@ def kmeans_clusters(Z, nb_cluster, show_clusters):
         draw_clusters(km.labels_, Z, km.cluster_centers_, 'Kmeans clustering', True)
     return km.labels_
 
-#compute Spectral clustering
+#compute Spectral clustering and return the labels and the affinity matrix
 def spectral_culstering(df, nb_cluster, show_clusters):
     print('')
     print('*** Spectral Clustering ***')
@@ -271,6 +275,7 @@ def spectral_culstering(df, nb_cluster, show_clusters):
 
     return (clustering.labels_, clustering.affinity_matrix_)
 
+#Compute Gaussian mixture and return the labels
 def gaussian_mixture(data, nb_components, show_clusters):
     print('*** Gaussian Mixture ***')
     print('')
@@ -282,6 +287,7 @@ def gaussian_mixture(data, nb_components, show_clusters):
 
     return prediction
 
+#Compute DBSCAN and return the labels
 def db_scan(data, epsilon, min_sample, show_clusters):
     print('')
     print('*** DBSCAN ***')
@@ -292,6 +298,7 @@ def db_scan(data, epsilon, min_sample, show_clusters):
 
     return clustering.labels_
 
+#Calculate the silhouette score
 def score_silhouette(algo):
     for K in [2, 3, 4, 5, 7, 9]:
         print('')
@@ -406,9 +413,8 @@ print("ARI entre Gaussian et Spectral : ", adjusted_rand_score(gaussian_mixture(
 
 """
 
-#Si on choisi le Spectral Clustering
-
-algo = 'kmean'
+#If we choose Spectral Clustering
+algo = 'Spectral'
 cluster_poor_countries, cluster_rich_countries = [], []
 
 if(algo == "Spectral"):
