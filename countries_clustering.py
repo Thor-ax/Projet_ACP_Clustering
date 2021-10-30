@@ -356,12 +356,13 @@ print('')
 print("Spectral : ", score_silhouette("SPECTRAL"))
 
 
-km_clusters = list_countries_per_clusters(kmeans_clusters(Z, 3, False))
+km_clusters = list_countries_per_clusters(kmeans_clusters(Z, 2, True))
 print("Kmeans clusters")
 print('')
 print('Cluster1 : ', km_clusters[0])
 print('Cluster2 : ', km_clusters[1])
 print('Cluster3 : ', km_clusters[2])
+
 
 spectral_clusters = list_countries_per_clusters(spectral_culstering(Z, 2, True)[0])
 print("Spectral clusters")
@@ -404,13 +405,27 @@ print('')
 print("ARI entre Gaussian et Spectral : ", adjusted_rand_score(gaussian_mixture(Z, 2, False), spectral_culstering(Z, 2, False)[0]))
 
 """
-sc = spectral_culstering(Z, 2, False)
-spectral_clusters = list_countries_per_clusters(sc[0])
-af_matrix = sc[1]
 
-cluster_poor_countries = spectral_clusters[1]
-cluster_rich_countries = spectral_clusters[0]
+#Si on choisi le Spectral Clustering
+
+algo = 'kmean'
+cluster_poor_countries, cluster_rich_countries = [], []
+
+if(algo == "Spectral"):
+    sc = spectral_culstering(Z, 2, False)
+    spectral_clusters = list_countries_per_clusters(sc[0])
+    af_matrix = sc[1]
+    cluster_poor_countries = spectral_clusters[1]
+    cluster_rich_countries = spectral_clusters[0]
+
+elif algo == "kmean":
+    km = kmeans_clusters(Z, 2, False)
+    kmean_clusters = list_countries_per_clusters(km)
+    cluster_poor_countries = kmean_clusters[0]
+    cluster_rich_countries = kmean_clusters[1]
+
 copy_countries = countries.tolist()
+
 new_dataframe = pd.read_csv("./Donnees_projet_2021/data.csv")
 print(new_dataframe)
 for country in cluster_rich_countries:
@@ -426,11 +441,9 @@ del new_dataframe['country']
 new_dataframe = fill_na_values(new_dataframe)
 L = [('inflation', [104]), ('GDP', [1000000]), ('life_expectation', [0, 32.1]), ('income', [80600,75200])]
 replace_outliers_by_mean(L, new_dataframe)
-print(new_countries)
 # => Environ 50 pays restants, on doit en choisir 10
 
-
-
+#With mean score for each country
 def with_mean_score():
     new_Z = scale_dataset(new_dataframe)
     row_means = new_Z.mean(axis=1)
@@ -440,7 +453,6 @@ def with_mean_score():
         liste_index_countries_to_help.append(get_min(liste_index_countries_to_help, row_means))
     print(liste_index_countries_to_help)
 
-
     liste_countries_to_help = []
     np_countries = new_countries.to_numpy()
     for index in liste_index_countries_to_help:
@@ -449,7 +461,6 @@ def with_mean_score():
     print(liste_countries_to_help)
     print('')
     print(Z.mean(axis=1))
-
 
 sorted_df_by_gdp = new_dataframe.sort_values(by=['GDP'])
 sorted_df_by_child_mortality = new_dataframe.sort_values(by=['child_mortality'])

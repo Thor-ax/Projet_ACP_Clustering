@@ -44,6 +44,7 @@ def kmeans_clusters():
 
     plt.show()
 
+# Draw the scatter points from the dataset (aggregation, jain, pathbased)
 def draw_points(axs):
     for data in datas:
         for point in data[0]:
@@ -52,11 +53,13 @@ def draw_points(axs):
 
         axs[data[1][0], data[1][1]].set_title(data[2])
 
+#compute K-means algorithm and return the prediction
 def k_means(dataset, K):
     km = KMeans(n_clusters=K, random_state=42, n_init=100)
     predict = km.fit_predict(dataset)
     return (km, predict)
 
+#draw the Kmean clustering
 def draw_k_means(axs):
     L = [(aggregation_df, 7, 'Aggregation with Kmeans', 0), (jain_df, 2, 'jain with Kmeans', 1), (pathbased_df, 3, 'pathbased with Kmeans', 2)]
     for X in L:
@@ -72,6 +75,7 @@ def draw_k_means(axs):
 
         axs[X[3], 0].set_title(X[2])
 
+#Cmpute Gaussian Mixture and return the predicted labels
 def gaussian_mixture(data, nb_components):
     print('*** Gaussian Mixture ***')
     print('')
@@ -95,6 +99,7 @@ def gaussian_clusters():
     draw_points(axs)
     plt.show()
 
+#Dras the Gaussian clustering
 def draw_gaussian_clusters(axs):
     L = [(aggregation_df, 7, 'Aggregation with Gaussian mixture', 0), (jain_df, 2, 'jain with Gaussian mixture', 1),
          (pathbased_df, 3, 'pathbased with Gaussian mixture', 2)]
@@ -108,6 +113,7 @@ def draw_gaussian_clusters(axs):
 
         axs[X[3], 0].set_title(X[2])
 
+#Compute the DBSCAN and return the labels
 def db_scan(data, epsilon, min_sample):
     print('')
     print('*** DBSCAN ***')
@@ -122,6 +128,7 @@ def db_scan_clusters(epsilon, min_sample, data):
 
     plt.show()
 
+#Draw the scatter points of one dataset (aggregation or jain or pathbased)
 def draw_scatter_points(axs, data):
     datas = {"aggregation": (aggregation_df, 'Aggregation'), "jain": (jain_df, 'Jain')
         , "pathbased": (pathbased_df, 'Pathbased')}
@@ -132,6 +139,7 @@ def draw_scatter_points(axs, data):
 
     axs[0].set_title(datas[data][1])
 
+#Draw the DBSCAN clustering
 def draw_dbscan_clusters(axs, epsilon, min_sample, data):
     datas = {"aggregation" : (aggregation_df, 'Aggregation with DBSCAN'), "jain": (jain_df, 'Jain with DBSCAN')
         , "pathbased": (pathbased_df, 'Pathbased with DBSCAN') }
@@ -145,6 +153,7 @@ def draw_dbscan_clusters(axs, epsilon, min_sample, data):
 
     axs[1].set_title(datas[data][1])
 
+#Run DBSCAN with different parameters to find the best
 def get_dbscan_parameters(df):
     eps, ms, ari = 0.5, 3, -1
     for epsilon in [0.5, 1, 1.5, 2, 2.5, 3, 4, 5]:
@@ -158,6 +167,7 @@ def get_dbscan_parameters(df):
                 ms = min_samples
     return (epsilon, ms, ari)
 
+#Compute the spectral clustering and return the labels
 def spectral_culstering(df, nb_cluster, assign_method):
     print('')
     print('*** Spectral Clustering ***')
@@ -172,6 +182,7 @@ def spectral_clusters(assign_method):
     draw_points(axs)
     plt.show()
 
+#plot the Spectral clustering
 def draw_spectral_cluster(axs, assign_method):
     L = [(aggregation_df, 7, 'Aggregation with Spectral clustering', 0), (jain_df, 2, 'jain with Spectral clustering', 1),
          (pathbased_df, 3, 'pathbased with Spectral clustering', 2)]
@@ -185,6 +196,7 @@ def draw_spectral_cluster(axs, assign_method):
 
         axs[X[3], 0].set_title(X[2])
 
+#COmpute the CAH and return the labels
 def CAH(df, t):
     print('')
     print('*** CAH ***')
@@ -193,6 +205,7 @@ def CAH(df, t):
     Z = hierarchy.linkage(scaled, 'ward', optimal_ordering=True)
 
     #dn = hierarchy.dendrogram(Z, color_threshold=t)
+    #plt.title('Aggregation dendrogramme for t = 8')
     #plt.show()
 
     clusters = fcluster(Z, t=t, criterion='distance')
@@ -204,6 +217,7 @@ def cah_cluster():
     draw_points(axs)
     plt.show()
 
+#Plot the CAH clustering
 def draw_cah_cluster(axs):
     L = [(aggregation_df, 8, 'Aggregation with CAH', 0),
          (jain_df, 20, 'jain with CAH', 1),
@@ -218,6 +232,7 @@ def draw_cah_cluster(axs):
 
         axs[X[3], 0].set_title(X[2])
 
+#Return adjusted rand score from given labels and dataset
 def rand_scores(labels1, algo, dataset_name, df):
     print(algo)
     print('')
@@ -230,6 +245,7 @@ def rand_scores(labels1, algo, dataset_name, df):
 # aggregation => t = 8
 # jain => t = 20
 # pathbased => t = 19
+#CAH(aggregation_df, 8)
 
 #get_dbscan_parameters(pathbased_df)
 
@@ -237,7 +253,6 @@ def rand_scores(labels1, algo, dataset_name, df):
 # epsilon = 2.5 et min_samples = 15 pour Jain => ARI = 1
 #epsilon = 2 et min_samples = 3 pour pathbased => ARI = 0.9858
 #db_scan_clusters(2, 3, "pathbased")
-
 
 #spectral_clusters("kmeans")
 #gaussian_clusters()
@@ -268,3 +283,4 @@ rand_scores(CAH(pathbased_df, 19), "CAH", 'Pathbased', pathbased_df)
 rand_scores(db_scan(aggregation_df, 1.5, 3), "DBSCAN", 'Aggregation', aggregation_df)
 rand_scores(db_scan(jain_df, 2.5, 15), "DBSCAN", 'Jain', jain_df)
 rand_scores(db_scan(pathbased_df, 2, 3), "DBSCAN", 'Pathbased', pathbased_df)
+
