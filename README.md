@@ -13,7 +13,7 @@ Lancer gaussian_clusters() pour effectuer un clustering avec le gaussian mixture
 Lancer db_scan_clusters(epsilon, min_samples, ("aggregation" or "jain" or "pathbased")) pour effectuer un clustering avec le DBSCAN et afficher ce partitionnement.
 Lancer cah_cluster() pour effectuer un clustering avec le CAH et afficher ce partitionnement.
 
-2) Me fichier countries_clustering
+2) Me fichier countries_clustering.py
 
 Il applique ces méthodes à un nouveau dataset contenant des données sur 167 pays (données économiques et de santé). 
 Tout d'abord, on observe le nuage de points et la distribution des données. 
