@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
@@ -12,6 +11,7 @@ aggregation_df = np.loadtxt("./Donnees_projet_2021/aggregation.txt")
 jain_df = np.loadtxt("./Donnees_projet_2021/jain.txt")
 pathbased_df = np.loadtxt("./Donnees_projet_2021/pathbased.txt")
 
+datas = [(aggregation_df, [0, 1], 'Aggregation'),(jain_df, [1, 1], 'jain'), (pathbased_df, [2, 1], 'Pathbased') ]
 int_to_color = {-1: "black", 0: "brown",1: 'blue', 2:'red', 3:'green', 4: 'yellow', 5: 'orange', 6: 'purple', 7: 'grey', 8: "pink", 9: ""}
 
 # draw points for each dataset with one color per cluster
@@ -34,9 +34,7 @@ def draw_scatter():
         axs[1, 0].scatter(point[0], point[1], c=color)
 
     axs[1, 0].set_title('Pathbased')
-
     plt.show()
-    return;
 
 # compute Kmean algorithm and draw clusters
 def kmeans_clusters():
@@ -46,123 +44,39 @@ def kmeans_clusters():
 
     plt.show()
 
-    return;
-
 def draw_points(axs):
-    for point in aggregation_df:
-        color = int_to_color[point[2]]
-        axs[0, 1].scatter(point[0], point[1], c=color)
+    for data in datas:
+        for point in data[0]:
+            color = int_to_color[point[2]]
+            axs[data[1][0], data[1][1]].scatter(point[0], point[1], c=color)
 
-    axs[0, 1].set_title('Aggregation')
-
-    for point in jain_df:
-        color = int_to_color[point[2]]
-        axs[1, 1].scatter(point[0], point[1], c=color)
-
-    axs[1, 1].set_title('Jain')
-
-    for point in pathbased_df:
-        color = int_to_color[point[2]]
-        axs[2, 1].scatter(point[0], point[1], c=color)
-
-    axs[2, 1].set_title('Pathbased')
-    return;
-
-def draw_k_means(axs):
-
-    # Aggregation
-    km_aggregation = KMeans(n_clusters=7, random_state=42, n_init=100)
-    km_aggregation.fit_predict(aggregation_df)
-    i = 0
-    for point in aggregation_df:
-        color = int_to_color[km_aggregation.labels_[i] + 1]
-        axs[0, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    centroids = km_aggregation.cluster_centers_
-
-    for center in centroids:
-        axs[0, 0].scatter(center[0], center[1], c="black")
-
-    axs[0, 0].set_title('Aggregation with Kmeans')
-
-    # Jain
-    km_jain = KMeans(n_clusters=2, random_state=42, n_init=100)
-    km_jain.fit_predict(jain_df)
-    i = 0
-    for point in jain_df:
-        color = int_to_color[km_jain.labels_[i] + 1]
-        axs[1, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    centroids = km_jain.cluster_centers_
-
-    for center in centroids:
-        axs[1, 0].scatter(center[0], center[1], c="black")
-
-    axs[1, 0].set_title('Jain with Kmeans')
-
-    # pathbased
-    km_pathbased = KMeans(n_clusters=3, random_state=42, n_init=100)
-    km_pathbased.fit_predict(pathbased_df)
-    i = 0
-    for point in pathbased_df:
-        color = int_to_color[km_pathbased.labels_[i] + 1]
-        axs[2, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    centroids = km_pathbased.cluster_centers_
-
-    for center in centroids:
-        axs[2, 0].scatter(center[0], center[1], c="black")
-
-    axs[2, 0].set_title('Pathbased with Kmeans')
-    return;
+        axs[data[1][0], data[1][1]].set_title(data[2])
 
 def k_means(dataset, K):
-    km = KMeans(n_clusters=K)
+    km = KMeans(n_clusters=K, random_state=42, n_init=100)
     predict = km.fit_predict(dataset)
-    return(km, predict)
+    return (km, predict)
 
-"""
+def draw_k_means(axs):
+    L = [(aggregation_df, 7, 'Aggregation with Kmeans', 0), (jain_df, 2, 'jain with Kmeans', 1), (pathbased_df, 3, 'pathbased with Kmeans', 2)]
+    for X in L:
+        (km, labels) = k_means(X[0], X[1])
+        i = 0
+        for point in X[0]:
+            color = int_to_color[labels[i] + 1]
+            axs[X[3], 0].scatter(point[0], point[1], c=color)
+            i += 1
 
-prediction = k_means(aggregation_df, 7)[1]
-labels2 = aggregation_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
+        for center in km.cluster_centers_:
+            axs[X[3], 0].scatter(center[0], center[1], c="black")
 
-print('Aggregation : ')
-print('')
-print('ARI = ', adjusted_rand_score(prediction, labels2))
-
-print('')
-prediction = k_means(jain_df, 2)[1]
-labels2 = jain_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Jain : ')
-print('')
-print('ARI = ', adjusted_rand_score(prediction, labels2))
-
-print('')
-
-prediction = k_means(pathbased_df, 3)[1]
-print(prediction)
-print('')
-print(prediction.shape)
-labels2 = pathbased_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Pathbased : ')
-print('')
-print('ARI = ', adjusted_rand_score(labels2, prediction))
-
-"""
+        axs[X[3], 0].set_title(X[2])
 
 def gaussian_mixture(data, nb_components):
     print('*** Gaussian Mixture ***')
     print('')
     gmm = mixture.GaussianMixture(n_components=nb_components, n_init=100, max_iter=300).fit(data)
-
+    """
     print('Mean: ')
     print('')
     print(gmm.means_)
@@ -170,9 +84,7 @@ def gaussian_mixture(data, nb_components):
     print('Covariance: ')
     print('')
     print(np.sqrt(gmm.covariances_))
-    print('')
-    print('Prediction')
-    print('')
+    """
     prediction = gmm.predict(data)
 
     return prediction
@@ -181,86 +93,25 @@ def gaussian_clusters():
     fig, axs = plt.subplots(3, 2)
     draw_gaussian_clusters(axs)
     draw_points(axs)
-
     plt.show()
 
-    return;
-
 def draw_gaussian_clusters(axs):
-    # Aggregation
-    gm_aggregation_labels = gaussian_mixture(aggregation_df, 7)
+    L = [(aggregation_df, 7, 'Aggregation with Gaussian mixture', 0), (jain_df, 2, 'jain with Gaussian mixture', 1),
+         (pathbased_df, 3, 'pathbased with Gaussian mixture', 2)]
+    for X in L:
+        labels = gaussian_mixture(X[0], X[1])
+        i = 0
+        for point in X[0]:
+            color = int_to_color[labels[i] + 1]
+            axs[X[3], 0].scatter(point[0], point[1], c=color)
+            i += 1
 
-    i = 0
-    for point in aggregation_df:
-        color = int_to_color[gm_aggregation_labels[i] + 1]
-        axs[0, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[0, 0].set_title('Aggregation with Gaussian Mixture')
-
-    # Jain
-    gm_jain_labels = gaussian_mixture(jain_df, 2)
-    i = 0
-    for point in jain_df:
-        color = int_to_color[gm_jain_labels[i] + 1]
-        axs[1, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[1, 0].set_title('Jain with Gaussian Mixture')
-
-    # Pathbased
-    gm_pathbased_labels = gaussian_mixture(pathbased_df, 3)
-    i = 0
-    for point in pathbased_df:
-        color = int_to_color[gm_pathbased_labels[i] + 1]
-        axs[2, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[2, 0].set_title('Pathbased with Gaussian Mixture')
-
-    return;
-
-"""
-
-prediction = gaussian_mixture(aggregation_df, 7)
-labels2 = aggregation_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Aggregation : ')
-print('')
-print('ARI = ', adjusted_rand_score(prediction, labels2))
-
-print('')
-prediction = gaussian_mixture(jain_df, 2)
-labels2 = jain_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Jain : ')
-print('')
-print('ARI = ', adjusted_rand_score(prediction, labels2))
-
-print('')
-
-prediction = gaussian_mixture(pathbased_df, 3)
-print(prediction)
-print('')
-print(prediction.shape)
-labels2 = pathbased_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Pathbased : ')
-print('')
-print('ARI = ', adjusted_rand_score(labels2, prediction))
-
-"""
-
+        axs[X[3], 0].set_title(X[2])
 
 def db_scan(data, epsilon, min_sample):
     print('')
     print('*** DBSCAN ***')
     clustering = DBSCAN(eps=epsilon, min_samples=min_sample).fit(data)
-    print('Clustering: ')
-    print(clustering)
 
     return clustering.labels_
 
@@ -271,112 +122,47 @@ def db_scan_clusters(epsilon, min_sample, data):
 
     plt.show()
 
-    return;
-
 def draw_scatter_points(axs, data):
+    datas = {"aggregation": (aggregation_df, 'Aggregation'), "jain": (jain_df, 'Jain')
+        , "pathbased": (pathbased_df, 'Pathbased')}
 
-    if(data == "aggregation"):
-        for point in aggregation_df:
-            color = int_to_color[point[2]]
-            axs[0].scatter(point[0], point[1], c=color)
+    for point in datas[data][0]:
+        color = int_to_color[point[2]]
+        axs[0].scatter(point[0], point[1], c=color)
 
-        axs[0].set_title('Aggregation')
-
-    if(data == "jain"):
-        for point in jain_df:
-            color = int_to_color[point[2]]
-            axs[0].scatter(point[0], point[1], c=color)
-
-        axs[0].set_title('Jain')
-
-    if(data == "pathbased"):
-        for point in pathbased_df:
-            color = int_to_color[point[2]]
-            axs[0].scatter(point[0], point[1], c=color)
-
-        axs[0].set_title('Pathbased')
-
-    return;
-
+    axs[0].set_title(datas[data][1])
 
 def draw_dbscan_clusters(axs, epsilon, min_sample, data):
+    datas = {"aggregation" : (aggregation_df, 'Aggregation with DBSCAN'), "jain": (jain_df, 'Jain with DBSCAN')
+        , "pathbased": (pathbased_df, 'Pathbased with DBSCAN') }
 
-    if (data == "aggregation"):
-        # Aggregation
-        ds_aggregation_labels = db_scan(aggregation_df, epsilon, min_sample)
+    labels = db_scan(datas[data][0], epsilon, min_sample)
+    i = 0
+    for point in datas[data][0]:
+        color = int_to_color[labels[i]]
+        axs[1].scatter(point[0], point[1], c=color)
+        i += 1
 
-        print(ds_aggregation_labels)
-
-        i = 0
-        for point in aggregation_df:
-            color = int_to_color[ds_aggregation_labels[i]]
-            axs[1].scatter(point[0], point[1], c=color)
-            i += 1
-
-        axs[1].set_title('Aggregation with DBSCAN')
-
-    if(data == "jain"):
-        # Jain
-        ds_jain_labels = db_scan(jain_df, epsilon, min_sample)
-        i = 0
-        for point in jain_df:
-            color = int_to_color[ds_jain_labels[i]]
-            axs[1].scatter(point[0], point[1], c=color)
-            i += 1
-
-        axs[1].set_title('Jain with DBSCAN')
-
-    if(data == "pathbased"):
-        # Pathbased
-        ds_pathbased_labels = db_scan(pathbased_df, epsilon, min_sample)
-        i = 0
-        for point in pathbased_df:
-            color = int_to_color[ds_pathbased_labels[i]]
-            axs[1].scatter(point[0], point[1], c=color)
-            i += 1
-
-        axs[1].set_title('Pathbased with DBSCAN')
-
-    return;
+    axs[1].set_title(datas[data][1])
 
 def get_dbscan_parameters(df):
-    eps = 0.5
-    ms = 3
-    ari = -1
+    eps, ms, ari = 0.5, 3, -1
     for epsilon in [0.5, 1, 1.5, 2, 2.5, 3, 4, 5]:
-
         for min_samples in range(3, 100):
-            labels1 = db_scan(data=df, epsilon = epsilon, min_sample = min_samples)
-            labels2 = df[:, [-1]]
+            labels1, labels2 = db_scan(data=df, epsilon = epsilon, min_sample = min_samples), df[:, [-1]]
             labels2 = np.transpose(labels2)[0]
             rd_score = adjusted_rand_score(labels1, labels2)
             if(rd_score > ari):
-
                 ari = rd_score
                 eps = epsilon
                 ms = min_samples
-
-    print('ARI = ', ari)
-    print('epsilon = ', eps)
-    print("min_samples = ", ms)
-    return (epsilon, ms)
-
-
-# epsilon = 1.5 et min_samples = 3 pour aggregation => ARI = 1
-# epsilon = 2.5 et min_samples = 15 pour Jain => ARI = 1
-#epsilon = 2 et min_samples = 3 pour pathbased => ARI = 0.9858
-
-#get_dbscan_parameters(pathbased_df)
-
-#db_scan_clusters(2, 3, "pathbased")
-
+    return (epsilon, ms, ari)
 
 def spectral_culstering(df, nb_cluster, assign_method):
     print('')
     print('*** Spectral Clustering ***')
     print('')
     clustering = SpectralClustering(n_clusters=nb_cluster, assign_labels = assign_method).fit(df)
-    print(clustering)
 
     return clustering.labels_
 
@@ -384,143 +170,101 @@ def spectral_clusters(assign_method):
     fig, axs = plt.subplots(3, 2)
     draw_spectral_cluster(axs, assign_method)
     draw_points(axs)
-
     plt.show()
 
-    return;
-
 def draw_spectral_cluster(axs, assign_method):
-    # Aggregation
-    sc_aggregation_labels = spectral_culstering(aggregation_df, 7, assign_method)
+    L = [(aggregation_df, 7, 'Aggregation with Spectral clustering', 0), (jain_df, 2, 'jain with Spectral clustering', 1),
+         (pathbased_df, 3, 'pathbased with Spectral clustering', 2)]
+    for X in L:
+        labels = spectral_culstering(X[0], X[1], assign_method)
+        i = 0
+        for point in X[0]:
+            color = int_to_color[labels[i] + 1]
+            axs[X[3], 0].scatter(point[0], point[1], c=color)
+            i += 1
 
-    i = 0
-    for point in aggregation_df:
-        color = int_to_color[sc_aggregation_labels[i] + 1]
-        axs[0, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[0, 0].set_title('Aggregation with Spectral clustering')
-
-    # Jain
-    sc_jain_labels = spectral_culstering(jain_df, 2, assign_method)
-    i = 0
-    for point in jain_df:
-        color = int_to_color[sc_jain_labels[i] + 1]
-        axs[1, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[1, 0].set_title('Jain with Spectral clustering')
-
-    # Pathbased
-    sc_pathbased_labels = spectral_culstering(pathbased_df, 3, assign_method)
-    i = 0
-    for point in pathbased_df:
-        color = int_to_color[sc_pathbased_labels[i] + 1]
-        axs[2, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[2, 0].set_title('Pathbased with Spectral clustering')
-
-    return;
-
-#spectral_clusters("kmeans")
-
-"""
-prediction = spectral_culstering(aggregation_df, 7, "kmeans")
-labels2 = aggregation_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Aggregation : ')
-print('')
-print('ARI = ', adjusted_rand_score(prediction, labels2))
-
-print('')
-prediction = spectral_culstering(jain_df, 2, "kmeans")
-labels2 = jain_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Jain : ')
-print('')
-print('ARI = ', adjusted_rand_score(prediction, labels2))
-
-print('')
-
-prediction = spectral_culstering(pathbased_df, 3, "kmeans")
-print(prediction)
-print('')
-print(prediction.shape)
-labels2 = pathbased_df[:, [-1]]
-labels2 = np.transpose(labels2)[0]
-
-print('Pathbased : ')
-print('')
-print('ARI = ', adjusted_rand_score(labels2, prediction))
-
-"""
+        axs[X[3], 0].set_title(X[2])
 
 def CAH(df, t):
     print('')
     print('*** CAH ***')
     scaler = StandardScaler()
-    scaler.fit(df)
-    scaled = scaler.transform(df)
-
+    scaled = scaler.fit_transform(df)
     Z = hierarchy.linkage(scaled, 'ward', optimal_ordering=True)
 
     #dn = hierarchy.dendrogram(Z, color_threshold=t)
-
     #plt.show()
 
     clusters = fcluster(Z, t=t, criterion='distance')
-    print('')
-    print(clusters)
     return clusters
 
 def cah_cluster():
     fig, axs = plt.subplots(3, 2)
     draw_cah_cluster(axs)
     draw_points(axs)
-
     plt.show()
 
-    return;
-
 def draw_cah_cluster(axs):
-    # Aggregation
-    cah_aggregation_labels = CAH(aggregation_df, 8)
+    L = [(aggregation_df, 8, 'Aggregation with CAH', 0),
+         (jain_df, 20, 'jain with CAH', 1),
+         (pathbased_df, 19, 'pathbased with CAH', 2)]
+    for X in L:
+        labels = CAH(X[0], X[1])
+        i = 0
+        for point in X[0]:
+            color = int_to_color[labels[i] + 1]
+            axs[X[3], 0].scatter(point[0], point[1], c=color)
+            i += 1
 
-    i = 0
-    for point in aggregation_df:
-        color = int_to_color[cah_aggregation_labels[i]]
-        axs[0, 0].scatter(point[0], point[1], c=color)
-        i += 1
+        axs[X[3], 0].set_title(X[2])
 
-    axs[0, 0].set_title('Aggregation with CAH')
+def rand_scores(labels1, algo, dataset_name, df):
+    print(algo)
+    print('')
+    labels2 = df[:, [-1]]
+    labels2 = np.transpose(labels2)[0]
+    print("For %s, ARI = %f " % (dataset_name, adjusted_rand_score(labels2, labels1)))
 
-    # Jain
-    cah_jain_labels = CAH(jain_df, 20)
-    i = 0
-    for point in jain_df:
-        color = int_to_color[cah_jain_labels[i]]
-        axs[1, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[1, 0].set_title('Jain with Spectral clustering')
-
-    # Pathbased
-    cah_pathbased_labels = CAH(pathbased_df, 19)
-    i = 0
-    for point in pathbased_df:
-        color = int_to_color[cah_pathbased_labels[i]]
-        axs[2, 0].scatter(point[0], point[1], c=color)
-        i += 1
-
-    axs[2, 0].set_title('Pathbased with CAH')
-
-    return;
-
-
-cah_cluster()
+#kmeans_clusters()
+#cah_cluster()
 # aggregation => t = 8
 # jain => t = 20
 # pathbased => t = 19
+
+#get_dbscan_parameters(pathbased_df)
+
+# epsilon = 1.5 et min_samples = 3 pour aggregation => ARI = 1
+# epsilon = 2.5 et min_samples = 15 pour Jain => ARI = 1
+#epsilon = 2 et min_samples = 3 pour pathbased => ARI = 0.9858
+#db_scan_clusters(2, 3, "pathbased")
+
+
+#spectral_clusters("kmeans")
+#gaussian_clusters()
+
+#ARI
+
+#Kmeans
+rand_scores(k_means(aggregation_df, 7)[1], "Kmeans", 'Aggregation', aggregation_df)
+rand_scores(k_means(jain_df, 2)[1], "Kmeans", 'Jain', jain_df)
+rand_scores(k_means(pathbased_df, 3)[1], "Kmeans", 'Pathbased', pathbased_df)
+
+#Spectral clustering
+rand_scores(spectral_culstering(aggregation_df, 7, "discretize"), "Spectral clustering", 'Aggregation', aggregation_df)
+rand_scores(spectral_culstering(jain_df, 2, "discretize"), "Spectral clustering", 'Jain', jain_df)
+rand_scores(spectral_culstering(pathbased_df, 3, "discretize"), "Spectral clustering", 'Pathbased', pathbased_df)
+
+#Gaussian mixture
+rand_scores(gaussian_mixture(aggregation_df, 7), "Gaussian mixture", 'Aggregation', aggregation_df)
+rand_scores(gaussian_mixture(jain_df, 2), "Gaussian mixture", 'Jain', jain_df)
+rand_scores(gaussian_mixture(pathbased_df, 3), "Gaussian mixture", 'Pathbased', pathbased_df)
+
+#CAH
+rand_scores(CAH(aggregation_df, 8), "CAH", 'Aggregation', aggregation_df)
+rand_scores(CAH(jain_df, 20), "CAH", 'Jain', jain_df)
+rand_scores(CAH(pathbased_df, 19), "CAH", 'Pathbased', pathbased_df)
+
+#DBSCAN
+rand_scores(db_scan(aggregation_df, 1.5, 3), "DBSCAN", 'Aggregation', aggregation_df)
+rand_scores(db_scan(jain_df, 2.5, 15), "DBSCAN", 'Jain', jain_df)
+rand_scores(db_scan(pathbased_df, 2, 3), "DBSCAN", 'Pathbased', pathbased_df)
