@@ -28,7 +28,7 @@ columns = df.columns
 def get_dataset_sise():
     return df.shape
 
-# SHow the number of NA values in the dataset
+# Show the number of NA values in the dataset
 def get_nb_na_in_df():
     return df.isnull().sum().sum()
 
@@ -371,7 +371,6 @@ print('Cluster2 : ', spectral_clusters[1])
 
 print('')
 
-
 #print("ARI entre Kmeans et CAH : ", adjusted_rand_score(CAH(Z, 17, ds, False, False), kmeans_clusters(Z, 3, False)))
 
 #Gaussian mixture
@@ -462,10 +461,10 @@ k = 0
 while k < 20:
     list_countries_with_lowest_gdp.append(countries[sorted_df_by_gdp.index[k]])
     list_countries_with_highest_cm.append(countries[sorted_df_by_child_mortality.index[-1-k]])
-    print(countries[sorted_df_by_gdp.index[k]])
-    print(countries[sorted_df_by_child_mortality.index[-1-k]])
-
     k += 1
+
+print('Pays avec le plus faible PIB : ', list_countries_with_lowest_gdp)
+print('Pays avec le plus haut taux de mortalité chee les enfants de moins de 5 ans: ', list_countries_with_highest_cm)
 
 
 final_countries = []
